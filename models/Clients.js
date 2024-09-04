@@ -19,6 +19,18 @@ module.exports = class ClientsModels {
         return await client.db('ElixirScents').collection('accounts').findOne({email:email})
     }
 
+    static async getProductsBag(idClient){
+        return  await client.db('ElixirScents').collection('accounts').findOne({_id:new ObjectId(idClient)})
+    }
+
+    static async addProductIntoBag(idClient, products){
+        await client.db('ElixirScents').collection('accounts').updateOne({_id:new ObjectId(idClient)},{$set:{bag:products}})
+    }
+    
+    static async removeProductIntoBag(idClient, idProduct){
+        await client.db('ElixirScents').collection('accounts').updateOne({_id:new ObjectId(idClient)},{$pull:{bag:{_id:idProduct}}})
+    }
+
     static async buy (idClient, productBought){
         return await client.db("ElixirScents").collection('accounts').updateOne({_id:new ObjectId(idClient)},{$push:{previousPurchases:productBought}})
     }
