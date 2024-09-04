@@ -2,7 +2,7 @@ const { ObjectId } = require('bson')
 const client = require('../db/conn')
 
 module.exports = class ProductsModels {
-    constructor(name,label,price,description,tags,aroma,commits,rate, amount){
+    constructor(name,label,price,description,tags,aroma,commits,rate, amount,profileImage,sexo){
         this.name = name
         this.label = label
         this.price = price
@@ -12,6 +12,8 @@ module.exports = class ProductsModels {
         this.commits = commits
         this.rate = rate
         this.amount = amount
+        this.profileImage = profileImage
+        this.sexo = sexo
     }
 
     async save (){
@@ -22,13 +24,23 @@ module.exports = class ProductsModels {
         return await client.db('ElixirScents').collection(label).find().toArray()
     } 
 
-    static async getProductById(label, id){
-        return await client.db('ElixirScents').collection(label).findOne({_id:new ObjectId(id)})
+    static async getProductById(label, idProduct){
+        return await client.db('ElixirScents').collection(label).findOne({_id:new ObjectId(idProduct)})
+    }
+
+    static async getProductByName(label, productName){
+        return await client.db('ElixirScents').collection(label).findOne({name:productName})
+    }
+
+    static async removeProduct(label, idProduct){
+        await client.db('ElixirScents').collection(label).deleteOne({_id:new ObjectId(idProduct)})
+    }
+
+    static async editProduct(label,idProduct, changes){
+        await client.db('ElixirScents').collection(label).updateOne({_id:new ObjectId(idProduct)},{$set:changes})
     }
 
     static async bought(label, idProduct){
         await client.db('ElixirScents').collection(label).updateOne({_id:new ObjectId(idProduct)},{$inc:{amount: -1}})
     }
-
-
 }
