@@ -1,6 +1,7 @@
 const bcrypt = require('bcrypt')
 const ClientsModels = require('../models/Clients')
 const ProductsModels = require('../models/Products')
+const {joinProductsIntoBag} = require('../utils/utils')
 
 module.exports = class ClientControllers{
     static async addAccount (req,res){
@@ -15,7 +16,7 @@ module.exports = class ClientControllers{
             const hashedPassword = await bcrypt.hashSync(password,saltRounds)
             const use = new ClientsModels(name,email,hashedPassword)
             await use.save()
-            res.status(201).json({message:'ok'})
+            res.status(201).json({message:'Account add'})
         } catch (error) {
             res.status(400).json({error:error.message})
         }
@@ -60,8 +61,31 @@ module.exports = class ClientControllers{
 
     }
 
+    static async addProducIntoBag (req, res){
+        const {idClient, product} = req.body
+        try {
+            const {bag} = await ClientsModels.getProductsBag(idClient)
+            const newBag = joinProductsIntoBag(product,bag)
+            await ClientsModels.addProductIntoBag(idClient,newBag)
+            res.json({message:'Product add'})
+        } catch (error) {
+            res.status(400).json({message:error.message})    
+        }
+
+    }
+
+    static async removeProducIntoBag (req,res){
+        const {idClient, idProduct} = req.params
+        try {
+            await ClientsModels.removeProductIntoBag(idClient,idProduct)
+            res.json({message:"Removed item"})
+        } catch (error) {
+            res.status(400).json({error:error.message})
+        }
+    }
+
     static async buy (req, res){
-        const {product, user,amount} = req.body
+        let {product, user,amount} = req.body
         product.amount = amount
         if(user.cpf == null){
             res.status(400).json({message:"You cannot buy without registering your CPF"})
@@ -73,13 +97,15 @@ module.exports = class ClientControllers{
             return
         }
 
-        if(product.amount <= 0){
-            res.status(400).json({message:"We don't have stock"})
-            return
-        }
-
         try {
             await ClientsModels.buy(user._id,product)
+            product = await ProductsModels.getProductById(product.label, product.id)
+            
+            if(product.amount <= 0){
+                res.status(400).json({message:"We don't have stock"})
+                return
+            }
+            
             await ProductsModels.bought(product.label,product._id)
             res.json({message:"Product bougth"})
         } catch (error) {
