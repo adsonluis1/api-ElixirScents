@@ -31,6 +31,10 @@ module.exports = class ProductsControllers{
        
        try {
         const products = await ProductsModels.getProducts(label)
+        products?.map(product=>{
+            let urlImg = `${req.protocol}://${req.get('host')}/${product.profileImage.path}`
+            product.profileImage.path = urlImg
+        })
         res.json({products})
         } catch (error) {
             res.status(400).json({error:error.message})
