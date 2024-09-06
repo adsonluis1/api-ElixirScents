@@ -23,8 +23,8 @@ module.exports = class ClientsModels {
         return  await client.db('ElixirScents').collection('accounts').findOne({_id:new ObjectId(idClient)})
     }
 
-    static async addProductIntoBag(idClient, products){
-        await client.db('ElixirScents').collection('accounts').updateOne({_id:new ObjectId(idClient)},{$set:{bag:products}})
+    static async addProductIntoBag(idClient, newBag){
+        await client.db('ElixirScents').collection('accounts').updateOne({_id:new ObjectId(idClient)},{$set:{bag:newBag}})
     }
     
     static async removeProductIntoBag(idClient, idProduct){
