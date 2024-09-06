@@ -3,20 +3,19 @@ function joinProductsIntoBag(product, bag){
         bag.push(product)
         return bag
     }
+    let repeat = false
 
-    bag.map((productBag)=>{
-        if(productBag.length !== product.length)
-            return false
+    bag.map((productBag,index)=>{
+        // vai ver se tem o msm item que está sendo add na bag e se tiver ele so vai aumentar a quantidade do item
+        
+        if(productBag._id === product._id){
+            repeat = true
+            productBag.amount += product.amount 
+        }
 
-        Object.keys(productBag).map(keyObject => {
-            let check = true
-            if(!check) return
-
-            if(keyObject != "amount" && productBag[keyObject] != product[keyObject])
-                check = false
-        })
-
-        productBag.amount += product.amount
+        if(!repeat && bag.length == index + 1){
+            bag.push(product)
+        }
     })
 
     return bag
