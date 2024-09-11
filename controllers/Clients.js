@@ -26,7 +26,6 @@ module.exports = class ClientControllers{
         const {email,password} = req.body
         try {
             const user = await ClientsModels.login(email)
-            console.log(user)
             
             if(!user){
                 res.status(400).json({message:"User not found"})
@@ -87,31 +86,51 @@ module.exports = class ClientControllers{
     }
 
     static async buy (req, res){
-        let {product, user,amount} = req.body
-        product.amount = amount
+        let {idProduct, user,amount,labelProduct} = req.body
+        
         if(user.cpf == null){
             res.status(400).json({message:"You cannot buy without registering your CPF"})
             return
         }
 
-        if(user.address != null){
+        if(user.address.length == 0){
             res.status(400).json({message:"You can't buy without the address"})
             return
         }
 
+        if(typeof idProduct == 'object'){
+            idProduct.map( async (idProductCurrent, index)=>{
+                try {
+                    let product = await ProductsModels.getProductById(labelProduct, idProductCurrent)
+                    if(product.amount <= 0){
+                        res.status(400).json({message:"We don't have stock"})
+                        return
+                    }
+                    product.amount = amount
+                    await ClientsModels.buy(user._id,product)
+                    await ProductsModels.bought(product.label,product._id)
+                    if(idProduct.length == index + 1)
+                        res.json({message:"Product bougth"})
+                } catch (error) {
+                    res.status(400).json({error:error.message})
+                }
+            })
+
+            return
+        }
+
         try {
-            await ClientsModels.buy(user._id,product)
-            product = await ProductsModels.getProductById(product.label, product.id)
-            
+            let product = await ProductsModels.getProductById(labelProduct, idProduct)
             if(product.amount <= 0){
                 res.status(400).json({message:"We don't have stock"})
                 return
             }
-            
+            product.amount = amount
+            await ClientsModels.buy(user._id,product)
             await ProductsModels.bought(product.label,product._id)
             res.json({message:"Product bougth"})
         } catch (error) {
-            res.json({error:error.message})
+            res.status(400).json({error:error.message})
         }
 
     }  
