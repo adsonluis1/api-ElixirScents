@@ -27,7 +27,7 @@ module.exports = class ClientsModels {
     }
 
     static async getProductsBag(idClient){
-        return  await client.db('ElixirScents').collection('accounts').findOne({_id:new ObjectId(idClient)})
+        return  await client.db('ElixirScents').collection('accounts').findOne({_id:new ObjectId(idClient)},{projection:{bag:1}})
     }
 
     static async addProductIntoBag(idClient, newBag){
