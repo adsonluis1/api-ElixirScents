@@ -7,7 +7,14 @@ module.exports = class ClientsModels {
         this.email = email
         this.password = password
         this.cpf = null
-        this.address = {}
+        this.address = {
+            street:null,
+            cep:null,
+            city:null,
+            number:null,
+            neighborhood:null,
+            state:null
+        }
         this.previousPurchases = []
     }
 
@@ -35,7 +42,7 @@ module.exports = class ClientsModels {
         return await client.db("ElixirScents").collection('accounts').updateOne({_id:new ObjectId(idClient)},{$push:{previousPurchases:productBought}})
     }
 
-    static async addAdditionalInfo(idClient,address, cpf){
+    static async addAdditionalInfo(idClient,address,cpf){
         return await client.db("ElixirScents").collection('accounts').updateOne({_id:new ObjectId(idClient)},{$set:{address,cpf}})
     }
 
