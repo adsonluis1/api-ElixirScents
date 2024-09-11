@@ -44,16 +44,18 @@ module.exports = class ClientControllers{
     }
 
     static async addAdditionalInfo(req, res){
-       const {street, cep, city, number, cpf, account} = req.body
+       const {street, cep, city, number, neighborhood, idClient, cpf,state} = req.body
        const address = {
             street,
             cep,
             city,
-            number
+            number,
+            neighborhood,
+            state
        }
        
        try {
-            await ClientsModels.addAdditionalInfo(account._id,address,cpf)
+            await ClientsModels.addAdditionalInfo(idClient,address, cpf)
             res.json({message:"Changed information"})
        } catch (error) {
             res.status(400).json({error:error.message})
