@@ -62,6 +62,16 @@ module.exports = class ClientControllers{
 
     }
 
+    static async getProducIntoBag (req,res){
+        const {idClient} = req.params
+        try {
+            const {bag} = await ClientsModels.getProductsBag(idClient)
+            res.json({bag})
+        } catch (error) {
+            res.status(400).json({error:error.message})
+        }
+    }
+
     static async addProducIntoBag (req, res){
         const {idClient, product} = req.body
         try {
@@ -76,7 +86,24 @@ module.exports = class ClientControllers{
     }
 
     static async removeProducIntoBag (req,res){
-        const {idClient, idProduct} = req.params
+        const {idClient} = req.params
+        const {idProduct} = req.body
+
+        if(typeof idProduct == 'object'){
+            idProduct.map(async (idProductCurrent, index)=>{
+                try {
+                    await ClientsModels.removeProductIntoBag(idClient,idProductCurrent)
+                    
+                    if(idProduct.length == index + 1)
+                        res.json({message:"Removed items"})
+                } catch (error) {
+                    res.status(400).json({error:error.message})
+                }
+            })
+
+            return
+        }
+
         try {
             await ClientsModels.removeProductIntoBag(idClient,idProduct)
             res.json({message:"Removed item"})
@@ -106,7 +133,8 @@ module.exports = class ClientControllers{
                         res.status(400).json({message:"We don't have stock"})
                         return
                     }
-                    product.amount = amount
+                    product.amount = amount[index]
+                    product.price *= amount[index]
                     await ClientsModels.buy(user._id,product)
                     await ProductsModels.bought(product.label,product._id)
                     if(idProduct.length == index + 1)
@@ -126,6 +154,7 @@ module.exports = class ClientControllers{
                 return
             }
             product.amount = amount
+            product.price *= amount
             await ClientsModels.buy(user._id,product)
             await ProductsModels.bought(product.label,product._id)
             res.json({message:"Product bougth"})
