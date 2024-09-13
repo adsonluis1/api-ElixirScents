@@ -26,6 +26,10 @@ module.exports = class ClientsModels {
         return await client.db('ElixirScents').collection('accounts').findOne({email:email})
     }
 
+    static async getPurchaseHistory(idClient){
+        return await client.db("ElixirScents").collection('accounts').findOne({_id:new ObjectId(idClient)},{projection:{previousPurchases:1, _id:0}})
+    }
+
     static async getProductsBag(idClient){
         return  await client.db('ElixirScents').collection('accounts').findOne({_id:new ObjectId(idClient)},{projection:{bag:1}})
     }
