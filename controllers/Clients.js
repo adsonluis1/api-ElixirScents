@@ -62,6 +62,22 @@ module.exports = class ClientControllers{
 
     }
 
+    static async getPurchaseHistory (req, res){
+        const {idClient} = req.params
+        console.log(`${req.protocol}://${req.get('host')}/uploads`)
+        try {
+            const history = await ClientsModels.getPurchaseHistory(idClient)
+            history.previousPurchases.map((purchaseProducts)=>{
+                purchaseProducts.products.map((products)=>{
+                    products.profileImage.path = `${req.protocol}://${req.get('host')}/uploads/${products.profileImage.filename}`
+                })
+            })
+            res.json(history)
+        } catch (error) {
+            res.json({error:error.message})
+        }
+    } 
+
     static async getProducIntoBag (req,res){
         const {idClient} = req.params
         try {
@@ -113,8 +129,14 @@ module.exports = class ClientControllers{
     }
 
     static async buy (req, res){
-        let {idProduct, user,amount,labelProduct} = req.body
-        
+        let {idProduct, user,labelProduct,amount} = req.body
+        const newBuy = {
+            datePurchase:null,
+            products:[]
+        }
+        const date = new Date
+        const currentDate = date.toUTCString()
+
         if(user.cpf == null){
             res.status(400).json({message:"You cannot buy without registering your CPF"})
             return
@@ -128,17 +150,20 @@ module.exports = class ClientControllers{
         if(typeof idProduct == 'object'){
             idProduct.map( async (idProductCurrent, index)=>{
                 try {
-                    let product = await ProductsModels.getProductById(labelProduct, idProductCurrent)
+                    let product = await ProductsModels.getProductById(labelProduct[index], idProductCurrent)
                     if(product.amount <= 0){
                         res.status(400).json({message:"We don't have stock"})
                         return
                     }
                     product.amount = amount[index]
                     product.price *= amount[index]
-                    await ClientsModels.buy(user._id,product)
-                    await ProductsModels.bought(product.label,product._id)
-                    if(idProduct.length == index + 1)
+                    newBuy.datePurchase = currentDate
+                    newBuy.products.push(product)
+                    if(idProduct.length == index + 1){
+                        await ClientsModels.buy(user._id,newBuy)
+                        await ProductsModels.bought(product.label,product._id,product.amount)                    
                         res.json({message:"Product bougth"})
+                    }
                 } catch (error) {
                     res.status(400).json({error:error.message})
                 }
@@ -148,6 +173,7 @@ module.exports = class ClientControllers{
         }
 
         try {
+            
             let product = await ProductsModels.getProductById(labelProduct, idProduct)
             if(product.amount <= 0){
                 res.status(400).json({message:"We don't have stock"})
@@ -155,7 +181,9 @@ module.exports = class ClientControllers{
             }
             product.amount = amount
             product.price *= amount
-            await ClientsModels.buy(user._id,product)
+            newBuy.datePurchase = currentDate
+            newBuy.products.push(product)
+            await ClientsModels.buy(user._id,newBuy)
             await ProductsModels.bought(product.label,product._id)
             res.json({message:"Product bougth"})
         } catch (error) {
