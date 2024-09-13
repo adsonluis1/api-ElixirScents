@@ -40,7 +40,7 @@ module.exports = class ProductsModels {
         await client.db('ElixirScents').collection(label).updateOne({_id:new ObjectId(idProduct)},{$set:changes})
     }
 
-    static async bought(label, idProduct){
-        await client.db('ElixirScents').collection(label).updateOne({_id:new ObjectId(idProduct)},{$inc:{amount: -1}})
+    static async bought(label, idProduct, amount){
+        await client.db('ElixirScents').collection(label).updateOne({_id:new ObjectId(idProduct)},{$inc:{amount: -amount}})
     }
 }
