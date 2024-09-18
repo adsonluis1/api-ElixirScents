@@ -25,6 +25,38 @@ module.exports = class ProductsControllers{
         }
     }
 
+    static async searchProcuts (req,res){
+        let {product} = req.params
+        let marcas = ["Chanel"]
+        let products = []
+        let foundProducts = []
+        let regex = new RegExp(product,"i")
+
+        marcas.map(async (marca,index)=>{
+            try {
+                let product = await ProductsModels.getProducts(marca)
+                product?.map(currentProduct=>{
+                    let urlImg = `${req.protocol}://${req.get('host')}/${currentProduct.profileImage.path}`
+                    currentProduct.profileImage.path = urlImg
+                })
+                products.push(...product)
+                if(marcas.length == index +1){
+                    products.filter((currentProduct,index)=>{
+                        if(currentProduct.name.search(regex) != -1){
+                            foundProducts.push(currentProduct)
+                        }
+                        if(products.length == index+1){
+                            res.json({foundProducts})
+                        }
+                    })
+                }
+            } catch (error) {
+                res.status(400).json({error:error.message})
+            }
+           
+        })        
+    }
+
     static async getProducts (req,res){
        let label = req.baseUrl.replace('/','')
        label = label.charAt(0).toUpperCase() + label.slice(1)      
